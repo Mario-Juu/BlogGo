@@ -22,6 +22,8 @@ git clone https://github.com/Mario-Juu/crawler.git
 ## Objetivo 
 Tendo como objetivo ser um backend que se vincula a um frontend, ambos criados na mesma aplicação, se pode fazer algumas mudanças com flags na criação da aplicação:
 
+
+Vá até o caminho que clonou o repositório, execute o seguinte comando para configurações personalizadas:
 ```sh
 ./WebDevGo.exe -port={insira a porta} -env=prd (caso queira cache ativada)
 ```
