@@ -7,7 +7,7 @@ Um projeto para desenvolvimento de uma aplicação web afim de utilizar de toda 
 - Go
 - HTML
 - CSS
-- Tailwind
+- Bootstrap
 
 ## Como usar
 1. Abra o VSCode ou sua IDE compatível de preferência
