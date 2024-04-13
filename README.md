@@ -13,7 +13,7 @@ Um projeto para desenvolvimento de uma aplicação web afim de utilizar de toda 
 1. Abra o VSCode ou sua IDE compatível de preferência
 2. Clone o repositório
 ```sh
-git clone https://github.com/Mario-Juu/crawler.git
+git clone https://github.com/Mario-Juu/WebDevGo.git
 ```
 3. Abra o executável (WebDevGo.exe)
 4. Visite o site na porta 8080 (http://localhost:8080)
