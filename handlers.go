@@ -5,37 +5,37 @@ import (
 	"net/http"
 )
 
-func (a *Application) HomeHandler(w http.ResponseWriter, r *http.Request) {
-	err := a.RenderTemplate(w, "index", TemplateData{Route: "index"})
+func (a *Application) HomeHandler(view *View) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+	err := view.Render(w, TemplateData{Route: "index"})
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Internal Server Error", 500)
 	}
 }
-
-func (a *Application) AboutHandler(w http.ResponseWriter, r *http.Request) {
-	err := a.RenderTemplate(w, "about", TemplateData{Route: "about"})
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "Internal Server Error", 500)
-	}
 }
 
-func (a *Application) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	err := a.RenderTemplate(w, "login", TemplateData{Route: "login"})
+func (a *Application) AboutHandler(view *View) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+	err := view.Render(w, TemplateData{Route: "about"})
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Internal Server Error", 500)
 	}
 }
+}
 
-func (a *Application) ContactHandler(w http.ResponseWriter, r *http.Request) {
-	err := a.RenderTemplate(w, "contact", TemplateData{Email: "mario@gmail.com",
-		Telefone: "123456789",
-		Route:    "contact"})
+func (a *Application) LoginHandler(view *View) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+	err := view.Render(w, TemplateData{Route: "login"})
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Internal Server Error", 500)
 	}
-
+}
+}
+func (a *Application) ContactHandler (view *View) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+	err := view.Render(w, TemplateData{Route: "contact"})
+	if err != nil {
+		log.Println(err)
+	}
+}
 }
