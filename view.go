@@ -4,14 +4,24 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
 //go:embed templates
-var TemplateFS embed.FS
+var templateFS embed.FS
+
+const BASE_LAYOUT = "base"
+
+type View struct {
+	Template *template.Template
+	Layout   string
+	Pages    []string
+}
+
+
 
 var funcs = template.FuncMap{
 	"GetYear": func() int {
@@ -19,71 +29,79 @@ var funcs = template.FuncMap{
 	},
 }
 
-type View struct {
-	Template *template.Template
-	Layout   string
-}
-
-func getLayoutFiles() []string{
+func getLayoutFiles() []string {
 	files, err := filepath.Glob("templates/*.layout.tmpl")
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	return files
 }
 
-func NewView(layout string, pages ...string) (*View, error) {
-	files := getLayoutFiles()
-	for _, p := range pages {
-		files = append(files, fmt.Sprintf("templates/%s.page.tmpl", p))
+func addDefaultTemplateData(r *http.Request, data *TemplateData) *TemplateData {
+	if data == nil {
+		data = &TemplateData{}
 	}
-	t, err := template.New("").Funcs(funcs).ParseFiles(files...)
+	data.User = getUserByCookie(r)
+	data.Route = strings.ReplaceAll(r.URL.Path, "/", "")
+	if data.Route == ""{
+		data.Route = "index"
+	}
+	return data
+}
+
+func NewView(pages ...string) (*View, error) {
+	t, err := parseTemplates(pages...)
 	if err != nil {
 		return nil, err
 	}
-	return &View{Template: t, Layout: layout}, nil
+	return &View{
+		Template: t,
+		Layout:   BASE_LAYOUT,
+		Pages:    pages,
+	}, nil
 }
 
-func (v *View) Render(w http.ResponseWriter, data any) error {
+func (v *View) Render(w http.ResponseWriter, r *http.Request, data *TemplateData) error {
+	if env == "dev" {
+		t, err := parseTemplates(v.Pages...)
+		if err != nil {
+			return err
+		}
+		v.Template = t
+	}
+	if data == nil{
+		data = &TemplateData{}
+	}
+
+	data = addDefaultTemplateData(r, data)
+
 	return v.Template.ExecuteTemplate(w, v.Layout, data)
 }
 
-
-
-type TemplateData struct {
-	Email    string
-	Telefone string
-	Route    string
-}
-
-func (a *Application) RenderTemplate(w http.ResponseWriter, page string, data any) error {
-
+func parseTemplates(pages ...string) (*template.Template, error) {
+	files := getLayoutFiles()
+	for _, f := range pages {
+		files = append(files, fmt.Sprintf("templates/%s.page.tmpl", f))
+	}
 	var t *template.Template
 	var err error
-	_, exists := a.Cache[page]
-	if !exists || a.Config.Env == "dev" {
-		t, err = parseTemplate(page, a.Config.Env)
-		if err != nil {
-			log.Printf("Error parsing template: %v", err)
-			return err
+
+	_, exists := cache[pages[0]]
+
+	if !exists {
+		if env == "dev" {
+			t, err = template.New("").Funcs(funcs).ParseFiles(files...)
+		} else {
+			t, err = template.New("").Funcs(funcs).ParseFS(templateFS, files...)
+			cache[pages[0]] = t
 		}
-		a.Cache[page] = t
 	} else {
-		t = a.Cache[page]
+		t = cache[pages[0]]
 	}
 
-	return t.ExecuteTemplate(w, "base", data)
-}
-
-func parseTemplate(page, env string) (*template.Template, error) {
-	if env == "dev" {
-		return template.New("").Funcs(funcs).ParseFiles("templates/"+page+".page.tmpl",
-			"templates/navbar.layout.tmpl",
-			"templates/base.layout.tmpl")
-
+	if err != nil {
+		return nil, err
 	}
-	return template.New("").Funcs(funcs).ParseFS(TemplateFS, "templates/"+page+".page.tmpl",
-		"templates/navbar.layout.tmpl",
-		"templates/base.layout.tmpl")
 
+	return t, nil
 }

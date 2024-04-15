@@ -6,33 +6,40 @@ import (
 	"log"
 )
 
+var env = "dev"
+var cache = make(map[string]*template.Template)
+
 var LoginView *View 
 var AboutView *View 
 var ContactView *View 
 var HomeView *View 
+var PostView *View
 
 func CreateViews(){
 	var err error
-	LoginView, err = NewView("base", "login")
+	LoginView, err = NewView( "login")
 	if err != nil {
 		log.Println(err)
 	}
-	AboutView, err = NewView("base", "about")
+	AboutView, err = NewView( "about")
 	if err != nil {
 		log.Println(err)
 	}
-	ContactView, err = NewView("base", "contact")
+	ContactView, err = NewView( "contact")
 	if err != nil {
 		log.Println(err)
 	}
-	HomeView, err = NewView("base", "index")
+	HomeView, err = NewView( "index")
 	if err != nil {
+		log.Println(err)
+	}
+	PostView, err = NewView( "post")
+	if err != nil{
 		log.Println(err)
 	}
 }
 
 func main() {
-	
 	cache := make(map[string]*template.Template)
 	config := Config{Version: "1.0.0",
 	}
