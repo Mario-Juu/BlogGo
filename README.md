@@ -19,7 +19,7 @@ git clone https://github.com/Mario-Juu/WebDevGo.git
 ```
 3. Crie o banco de dados 
 ```sh
-docker run --name dbblog -e MYSQL_ROOT_PASSWORD=secret -e MARIADB_MSQL_LOCALHOST_USER=true -d mariadb:latest
+docker run --name dbblog -e MYSQL_ROOT_PASSWORD=secret -e MARIADB_MSQL_LOCALHOST_USER=true -p 3306:3306 -d mariadb:latest
 
 docker exec -it dbblog bash
 
