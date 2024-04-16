@@ -15,8 +15,12 @@ Um projeto para desenvolvimento de uma aplicação web afim de utilizar de toda 
 ```sh
 git clone https://github.com/Mario-Juu/WebDevGo.git
 ```
-3. Abra o executável (WebDevGo.exe)
-4. Visite o site na porta 8080 (http://localhost:8080)
+3. Crie o banco de dados 
+```sh
+docker run --name dbblog -e MYSQL_ROOT_PASSWORD=secret -e MARIADB_MSQL_LOCALHOST_USER=true -d mariadb:latest
+``` 
+4. Abra o executável (WebDevGo.exe)
+5. Visite o site na porta 8080 (http://localhost:8080)
 
 
 ## Objetivo 
