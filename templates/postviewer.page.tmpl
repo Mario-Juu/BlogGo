@@ -1,0 +1,13 @@
+{{template "base" .}}
+
+{{define "title"}}
+About
+{{end}}
+
+
+{{define "content"}}
+<a href="/">Voltar</a>
+<h1>{{.Post.Title}}</h1>
+<h4>By: {{.Post.Author.Email}}</h4>
+<p>{{.Post.Content}}</p>
+{{end}}
