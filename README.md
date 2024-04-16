@@ -8,6 +8,8 @@ Um projeto para desenvolvimento de uma aplicação web afim de utilizar de toda 
 - HTML
 - CSS
 - Bootstrap
+- Docker
+- MariaDB
 
 ## Como usar
 1. Abra o VSCode ou sua IDE compatível de preferência
@@ -18,6 +20,15 @@ git clone https://github.com/Mario-Juu/WebDevGo.git
 3. Crie o banco de dados 
 ```sh
 docker run --name dbblog -e MYSQL_ROOT_PASSWORD=secret -e MARIADB_MSQL_LOCALHOST_USER=true -d mariadb:latest
+
+docker exec -it dbblog bash
+
+mariadb -u root -p
+(digite secret e dê enter)
+
+use mysql;
+
+(insira os comandos SQL dentro de import.sql para criar as tabelas)
 ``` 
 4. Abra o executável (WebDevGo.exe)
 5. Visite o site na porta 8080 (http://localhost:8080)
