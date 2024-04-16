@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	
 )
 
 //go:embed templates
@@ -27,6 +28,14 @@ var funcs = template.FuncMap{
 	"GetYear": func() int {
 		return time.Now().Year()
 	},
+}
+
+func getStaticFiles() []string {
+	files, err := filepath.Glob("static/*.*")
+	if err != nil {
+		panic(err)
+	}
+	return files
 }
 
 func getLayoutFiles() []string {
@@ -62,6 +71,11 @@ func NewView(pages ...string) (*View, error) {
 }
 
 func (v *View) Render(w http.ResponseWriter, r *http.Request, data *TemplateData) error {
+	if data == nil{
+		data = &TemplateData{}
+	}
+
+	data = addDefaultTemplateData(r, data)
 	if env == "dev" {
 		t, err := parseTemplates(v.Pages...)
 		if err != nil {
@@ -69,20 +83,17 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *TemplateData
 		}
 		v.Template = t
 	}
-	if data == nil{
-		data = &TemplateData{}
-	}
-
-	data = addDefaultTemplateData(r, data)
 
 	return v.Template.ExecuteTemplate(w, v.Layout, data)
 }
 
 func parseTemplates(pages ...string) (*template.Template, error) {
 	files := getLayoutFiles()
+	files = append(files, getStaticFiles()...)
 	for _, f := range pages {
 		files = append(files, fmt.Sprintf("templates/%s.page.tmpl", f))
 	}
+
 	var t *template.Template
 	var err error
 
@@ -91,8 +102,10 @@ func parseTemplates(pages ...string) (*template.Template, error) {
 	if !exists {
 		if env == "dev" {
 			t, err = template.New("").Funcs(funcs).ParseFiles(files...)
+			
 		} else {
 			t, err = template.New("").Funcs(funcs).ParseFS(templateFS, files...)
+			
 			cache[pages[0]] = t
 		}
 	} else {
