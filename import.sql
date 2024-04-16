@@ -5,7 +5,6 @@ CREATE TABLE users (
     PRIMARY KEY (id)
 );
 
-INSERT INTO users(email, password) values ("mariojralves2006@gmail.com", "1234");
 
 CREATE TABLE posts(
     id int NOT NULL AUTO_INCREMENT,
