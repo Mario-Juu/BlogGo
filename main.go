@@ -19,6 +19,8 @@ var PostView *View
 
 var SignUpView *View
 var NewPostView *View
+var EditPostView *View
+var PostViewerView *View
 
 var db *sql.DB
 
@@ -53,6 +55,14 @@ func CreateViews(){
 	if err != nil{
 		log.Println(err)
 	}
+	EditPostView, err = NewView("postedit")
+	if err != nil{
+		log.Println(err)
+	}
+	PostViewerView, err = NewView("postviewer")
+	if err != nil{
+		log.Println(err)
+	}
 }
 
 func main() {
@@ -69,12 +79,13 @@ func main() {
 	 }
 	CreateViews()
 	 var err error
-	db, err = sql.Open("mysql", "root:secret@/mysql")
+	db, err = sql.Open("mysql", "root:secret@/mysql?parseTime=true")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 	db.Ping()
+	log.Println("Connected to database")
 	if err != nil{
 		log.Fatal(err)
 	}
