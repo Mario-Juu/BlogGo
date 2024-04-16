@@ -52,7 +52,7 @@ func ReadPosts() []Post {
 	for rows.Next() {
 		var user User
 		var post Post
-		err = rows.Scan(&post.Id, &post.Title, &post.Content, &post.Slug, &user.Id, &post.CreatedAt, &post.UpdatedAt)
+		err = rows.Scan(&post.Id, &post.Title, &post.Slug, &post.Content, &user.Id, &post.CreatedAt, &post.UpdatedAt)
 		if err != nil {
 			log.Println(err)
 		}
