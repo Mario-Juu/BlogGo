@@ -2,9 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -15,7 +18,8 @@ type TemplateData struct {
 	Route    string
 	Errors   []string
 	User     *SessionUser
-	Posts []Post
+	Posts    []Post
+	Post     Post
 }
 
 type SessionUser struct {
@@ -25,7 +29,6 @@ type SessionUser struct {
 func getUserByCookie(r *http.Request) *SessionUser {
 	cookie, err := r.Cookie("session")
 	if err != nil {
-		log.Println(err)
 		return nil
 	}
 	if cookie != nil {
@@ -41,14 +44,29 @@ func (a *Application) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			log.Println("User not logged in. Redirect to login page...")
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 		}
-		log.Println("User logged in. Continue...")
 		next(w, r)
 	}
 }
 
 func (a *Application) HomeHandler(view *View) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := view.Render(w, r, nil)
+		posts := ReadPosts()
+		err := view.Render(w, r, &TemplateData{Posts: posts})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func (a *Application) PostViewerHandler(view *View) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		postId, _ := strconv.Atoi(id)
+		post, err := GetPostById(postId)
+		if err != nil {
+			log.Println(err)
+		}
+		err = view.Render(w, r, &TemplateData{Post: *post})
 		if err != nil {
 			log.Println(err)
 		}
@@ -92,7 +110,7 @@ func (a *Application) LoginHandler(view *View) http.HandlerFunc {
 			if data.Password == user.Password {
 				data.Success = true
 
-				cookie := http.Cookie{Name: "session", Value: data.Email, Expires: time.Now().Add(time.Minute), HttpOnly: true}
+				cookie := http.Cookie{Name: "session", Value: data.Email, Expires: time.Now().Add(time.Minute * 15), HttpOnly: true}
 				http.SetCookie(w, &cookie)
 				json.NewEncoder(w).Encode(data)
 				return
@@ -114,8 +132,13 @@ func (a *Application) ContactHandler(view *View) http.HandlerFunc {
 }
 func (a *Application) PostHandler(view *View) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		errorMsg := r.URL.Query().Get("error")
+		errors := []string{}
+		if errorMsg != "" {
+			errors = append(errors, errorMsg)
+		}
 		posts := ReadPosts()
-		err := view.Render(w, r, &TemplateData{Posts: posts})
+		err := view.Render(w, r, &TemplateData{Posts: posts, Errors: errors})
 		if err != nil {
 			log.Println(err)
 		}
@@ -152,11 +175,13 @@ func (a *Application) SignUpHandler(view *View) http.HandlerFunc {
 
 			stmt, err := db.Prepare("INSERT INTO users (email, password) values (?, ?)")
 			if err != nil {
+				log.Println(err)
 				json.NewEncoder(w).Encode(data)
 				return
 			}
 			_, err = stmt.Exec(data.Email, data.Password)
 			if err != nil {
+				log.Println(err)
 				json.NewEncoder(w).Encode(data)
 				return
 			}
@@ -177,14 +202,14 @@ func (a *Application) NewPostHandler(view *View) http.HandlerFunc {
 			}
 		} else if r.Method == http.MethodPost {
 			var data struct {
-				Title   string `json:"title"`
-				Content string `json:"content"`
-				Success bool   `json:"success"`
-				Errors []string `json:"errors"`
+				Title   string   `json:"title"`
+				Content string   `json:"content"`
+				Success bool     `json:"success"`
+				Errors  []string `json:"errors"`
 			}
 
 			err := json.NewDecoder(r.Body).Decode(&data)
-			if err != nil{
+			if err != nil {
 				log.Println(err)
 				return
 			}
@@ -196,11 +221,11 @@ func (a *Application) NewPostHandler(view *View) http.HandlerFunc {
 			if err != nil {
 				errors = append(errors, "You are not logged in")
 			}
-			if title == ""{
+			if title == "" {
 				errors = append(errors, "Title is required")
 			}
 
-			if content == ""{
+			if content == "" {
 				errors = append(errors, "Content is required")
 			}
 			if len(errors) > 0 {
@@ -211,7 +236,7 @@ func (a *Application) NewPostHandler(view *View) http.HandlerFunc {
 
 			post := Post{
 				Title:   title,
-				Content: content,
+				Content: template.HTML(content),
 				Author:  user,
 				Slug:    slugify(title),
 			}
@@ -223,6 +248,67 @@ func (a *Application) NewPostHandler(view *View) http.HandlerFunc {
 
 		}
 	}
+}
+
+func (a *Application) EditPostHandler(view *View) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		postId := r.URL.Query().Get("id")
+		id, _ := strconv.Atoi(postId)
+
+		if r.Method == http.MethodGet {
+			post, err := GetPostById(id)
+			if err != nil {
+				log.Println(err)
+				view.Render(w, r, &TemplateData{Post: *post, Errors: []string{err.Error()}})
+				return
+			}
+			err = view.Render(w, r, &TemplateData{Post: *post})
+			if err != nil {
+				log.Println(err)
+			}
+		} else if r.Method == http.MethodPost {
+			postGet, err := GetPostById(id)
+			if err != nil {
+				log.Println(err)
+				view.Render(w, r, &TemplateData{Post: *postGet, Errors: []string{err.Error()}})
+				return
+			}
+			title := r.FormValue("title")
+			content := r.FormValue("content")
+			if title == "" {
+				title = postGet.Title
+			}
+			if content == "" {
+				content = string(postGet.Content)
+			}
+			post := Post{
+				Id:        id,
+				Title:     title,
+				Content:   template.HTML(content),
+				Slug:      slugify(title),
+				UpdatedAt: time.Now(),
+			}
+			err = UpdatePost(post)
+			if err != nil {
+				view.Render(w, r, &TemplateData{Post: post, Errors: []string{err.Error()}})
+				return
+			}
+			http.Redirect(w, r, "/post", http.StatusSeeOther)
+		}
+	}
+}
+
+func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
+	postId := r.URL.Query().Get("id")
+	id, _ := strconv.Atoi(postId)
+	err := DeletePost(id)
+	if err != nil {
+		log.Println(err)
+		http.Redirect(w, r, fmt.Sprintf("/post?error=%s", err.Error()), http.StatusSeeOther)
+		return
+	}
+	http.Redirect(w, r, "/post", http.StatusSeeOther)
+
 }
 
 func slugify(value string) string {
