@@ -1,16 +1,20 @@
 {{template "base" .}}
 
 {{define "title"}}
-Login
+Sign Up
 {{end}}
 
 
 {{define "content"}}
-<h1>Login Page</h1>
+<h1>Sign Up Page</h1>
 
 <div class="container col-5">
     <form id="form" action="#" method="post" class="m-5">
-      <div id="errors" class="alert alert-danger" hidden>Login inválido</div>
+      <div id="errors" class="alert alert-danger" hidden>Cadastro inválido</div>
+      <div id="success" class="alert alert-success" hidden>
+        success message
+      </div>
+      <h1>Signup</h1>
       <div class="mb-3 row">
         <label for="email" class="col-sm-2 col-form-label">Email</label>
         <div class="col-sm-10">
@@ -29,7 +33,7 @@ Login
         </div>
       </div>
       <div class="row col-3 offset-2">
-        <button id="button" type="submit" class="btn btn-primary">Login</button>
+        <button id="button" type="submit" class="btn btn-primary">Send</button>
       </div>
     </form>
   </div>
@@ -41,7 +45,7 @@ Login
             event.preventDefault()
             const email = document.getElementById("email").value
             const password = document.getElementById("password").value
-            fetch("/login",{
+            fetch("/signup",{
                 method: "POST",
                 headers: {
                     Accept: "application/json",
@@ -51,10 +55,12 @@ Login
             }).then(res => res.json())
             .then((data) => {console.log(data)
             if(data.success){
-                {
+                data = document.getElementById("success")
+                data.hidden = false
+                setTimeout(() => {
                 console.log("Redirecionando para a home")
                 window.location.href = "/"
-            }
+            }, 2000)
         } else { data = document.getElementById("errors")
         data.hidden = false
         }

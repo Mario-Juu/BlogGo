@@ -8,4 +8,14 @@ Post
 {{define "content"}}
 <h1>Post Page</h1>
 <p>Bem vindo, {{ .User.Email}}</p>
+
+
+<h3>Lista de Posts</h3>
+<ul>
+{{range .Posts}}
+    <li><a>{{.Title}}</a></li>
+{{end}}
+</ul>
+
+<a href="/post/new">New Post</a>
 {{end}}
