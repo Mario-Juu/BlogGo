@@ -4,6 +4,8 @@ import (
 	"flag"
 	"html/template"
 	"log"
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var env = "dev"
@@ -14,6 +16,11 @@ var AboutView *View
 var ContactView *View 
 var HomeView *View 
 var PostView *View
+
+var SignUpView *View
+var NewPostView *View
+
+var db *sql.DB
 
 func CreateViews(){
 	var err error
@@ -37,6 +44,15 @@ func CreateViews(){
 	if err != nil{
 		log.Println(err)
 	}
+	SignUpView, err = NewView("signup")
+	if err != nil{
+		log.Println(err)
+	}
+
+	NewPostView, err = NewView("postnew")
+	if err != nil{
+		log.Println(err)
+	}
 }
 
 func main() {
@@ -52,8 +68,18 @@ func main() {
 	 	Cache: cache,
 	 }
 	CreateViews()
+	 var err error
+	db, err = sql.Open("mysql", "root:secret@/mysql")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	db.Ping()
+	if err != nil{
+		log.Fatal(err)
+	}
 	
-
+	 
 
 	log.Printf("Starting server from %s on :%s", config.Env, config.Port)
 
