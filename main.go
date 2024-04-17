@@ -1,72 +1,127 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
+	"flag"
+	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"log"
-	"net/http"
 )
 
+var env = "dev"
+var cache = make(map[string]*template.Template)
 
+var LoginView *View
+var AboutView *View
+var ContactView *View
+var HomeView *View
+var PostView *View
 
-var cache map[string] *template.Template
+var SignUpView *View
+var NewPostView *View
+var EditPostView *View
+var PostViewerView *View
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "index")
-}
+var db *sql.DB
 
-func AboutHandler(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "about")
-}
-
-func RenderTemplate(w http.ResponseWriter, page string){
-
-	var t *template.Template
+func CreateViews() {
 	var err error
-	_, exists := cache[page]
-	if !exists {
-	t, err = template.ParseFiles("templates/" + page + ".page.tmpl", 
-									"templates/base.layout.tmpl")
-	
-	cache[page] = t
-} else{
-	t = cache[page]
-}
-if err = t.Execute(w, nil); err != nil {
-	log.Println(err)
-	return
-}
+	LoginView, err = NewView("login")
+	if err != nil {
+		log.Println(err)
+	}
+	AboutView, err = NewView("about")
+	if err != nil {
+		log.Println(err)
+	}
+	ContactView, err = NewView("contact")
+	if err != nil {
+		log.Println(err)
+	}
+	HomeView, err = NewView("index")
+	if err != nil {
+		log.Println(err)
+	}
+	PostView, err = NewView("post")
+	if err != nil {
+		log.Println(err)
+	}
+	SignUpView, err = NewView("signup")
+	if err != nil {
+		log.Println(err)
+	}
+
+	NewPostView, err = NewView("postnew")
+	if err != nil {
+		log.Println(err)
+	}
+	EditPostView, err = NewView("postedit")
+	if err != nil {
+		log.Println(err)
+	}
+	PostViewerView, err = NewView("postviewer")
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func main() {
+	cache := make(map[string]*template.Template)
+	config := Config{Version: "1.0.0"}
+	flag.StringVar(&config.Port, "port", "8080", "HTTP Server Port")
+	flag.StringVar(&config.Env, "env", "dev", "Application Environment")
+	flag.Parse()
 
-	cache = make(map[string]*template.Template)
-
-	config := Config{
-		Port:    "3000",
-		Env:     "dev",
-		Version: "1.0.0",
+	app := Application{
+		Config: config,
+		Cache:  cache,
 	}
-
-	// app := Application{
-	// 	Config: config,
-	// 	Cache: cache,
-	// }
-
-	http.HandleFunc("/", HomeHandler)
-
-	http.HandleFunc("/about", func(w http.ResponseWriter, r *http.Request) {
-		RenderTemplate(w, "about")
-	})
-
-	http.Handle("/static/",
-		http.StripPrefix("/static/",
-			http.FileServer(http.Dir("static"))))
-
-
+	CreateViews()
+	var err error
+	db, err = sql.Open("mysql", "root:secret@/mysql?parseTime=true")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Connected to database")
+	initTables()
 
 	log.Printf("Starting server from %s on :%s", config.Env, config.Port)
-	if err := http.ListenAndServe(fmt.Sprintf(":%s", config.Port), nil); err != nil{
-		log.Println(err)
+
+	if err := app.Start(); err != nil {
+		log.Fatal(err)
 	}
+}
+
+func initTables() {
+	log.Println("Criando as tabelas")
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS users (
+		id int NOT NULL AUTO_INCREMENT,
+		email varchar(255) UNIQUE,
+		password varchar(255),
+		PRIMARY KEY (id)
+	);`)
+	if err != nil {
+		log.Panic(err)
+	}
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS posts(
+		id int NOT NULL AUTO_INCREMENT,
+		title varchar(255) NOT NULL,
+		slug varchar (255) NOT NULL UNIQUE,
+		content text,
+		user_id int NOT NULL,
+		created_at timestamp DEFAULT CURRENT_TIMESTAMP(),
+		updated_at timestamp DEFAULT CURRENT_TIMESTAMP(),
+		PRIMARY KEY (id),
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	);
+	`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }

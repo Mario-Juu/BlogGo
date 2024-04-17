@@ -1,0 +1,78 @@
+{{template "base" .}}
+
+{{define "title"}}
+New Post
+{{end}}
+
+
+{{define "content"}}
+<div class="container">
+  <div class="row">
+      <div class="col-lg-12">
+<h1 class="mt-5">New Post</h1>
+    </div>
+  </div>
+</div>
+<div class="container col-5">
+    <form id="form" action="/post/new" method="post" class="m-5">
+      <div id="errors" class="alert alert-danger" hidden>
+        <ul>
+          
+        </ul>
+      </div>
+<div class="mb-3 row">
+    <label for="title" class="col-sm-2 col-form-label">Title</label>
+    <div class="col-sm-10">
+      <input type="text" id="title" name="title" class="form-control" />
+    </div>
+  </div>
+  <div class="mb-3 row">
+    <label for="content" class="col-sm-2 col-form-label">Content</label>
+    <div class="col-sm-10">
+      <textarea
+        type="content"
+        id="content"
+        name="content"
+        class="form-control"
+      ></textarea>
+    </div>
+  </div>
+  <div class="row col-3 offset-2">
+    <button id="button" type="submit" class="btn btn-primary">Create</button>
+  </div>
+</form>
+</div>
+{{end}}
+
+{{define "scripts"}}
+    <script>
+        document.getElementById("button").addEventListener("click", event => {
+            event.preventDefault()
+            const title = document.getElementById("title").value
+            const content = document.getElementById("content").value
+            fetch("/post/new",{
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({title, content})
+            }).then(res => res.json())
+            .then((data) => {console.log(data)
+                if(data.errors){
+                    const errors = document.getElementById("errors")
+                    errors.hidden = false
+                    errors.innerHTML = ""
+                    data.errors.forEach((error) => {
+                        const li = document.createElement("li")
+                        li.textContent = error
+                        errors.appendChild(li)
+                    })
+                } else {
+                    window.location.href = "/post"
+                }
+    })
+}
+        );
+    </script>
+{{end}}

@@ -1,0 +1,21 @@
+{{template "base" .}}
+
+{{define "title"}}
+About
+{{end}}
+
+
+{{define "content"}}
+<div class="row col-1">
+<a href="/" class="btn btn-primary">Voltar</a>
+</div>
+<div class="container-sm">
+    <div class="card w-75">
+        <div class="card-body">
+          <h5 class="card-title">{{.Post.Title}}</h5>
+          <div class="mb-1 text-muted">By: {{.Post.Author.Email}}</div>
+          <p class="card-text">{{.Post.Content}}</p>
+        </div>
+      </div>
+</div>
+{{end}}
