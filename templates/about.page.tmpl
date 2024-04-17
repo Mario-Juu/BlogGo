@@ -1,14 +1,24 @@
 {{template "base" .}}
 
 {{define "title"}}
-About
+Sobre
 {{end}}
-
 
 {{define "content"}}
-<h1>About Page</h1>
-<a href="/">Home</a>
-{{if .User}}
-<p>Bem vindo, {{ .User.Email}}</p>
-{{end}}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="mt-5">Sobre a nossa aplicação</h1>
+            <p class="lead">Esta aplicação é uma plataforma de ponta projetada para o desenvolvimento de blogs, construída com a linguagem de programação Go. Ela é projetada para proporcionar a melhor experiência ao usuário, seguindo as melhores práticas de desenvolvimento de software.</p>
+            <p>Aqui estão algumas das características que fazem esta aplicação se destacar:</p>
+            <ul>
+                <li>Design com templates que torna o site dinâmico.</li>
+                <li>Desempenho rápido e eficiente.</li>
+                <li>Banco de Dados SQL.</li>
+                <li>Requisições simples e intuitivas..</li>
+            </ul>
+            <p>Estou constantemente trabalhando para melhorar a aplicação e adicionar novas funcionalidades. Valorizo o feedback dos visualizadores e busco tornar a aplicação a melhor possível.</p>
+        </div>
+    </div>
+</div>
 {{end}}
