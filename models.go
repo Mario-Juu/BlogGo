@@ -79,6 +79,44 @@ func ReadPosts() []Post {
 	return posts
 }
 
+func ReadPostsById(id int) []Post {
+	posts := []Post{}
+	stmt, err := db.Prepare(`select p.id, p.title, p.slug, p.content, p.user_id, u.email, p.created_at, p.updated_at 
+							from posts p join users u on p.user_id = u.id where p.user_id = ?`)
+	if err != nil {
+		log.Println(err)
+		return posts
+	}
+	rows, err := stmt.Query(id)
+	if err != nil {
+		log.Println(err)
+		return posts
+	}
+	for rows.Next() {
+		var post Post
+		var user User
+		err := rows.Scan(
+			&post.Id,
+			&post.Title,
+			&post.Slug,
+			&post.Content,
+			&user.Id,
+			&user.Email,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+		)
+		if err != nil {
+			log.Println(err)
+			return posts
+		}
+		post.Author = &user
+		posts = append(posts, post)
+	}
+
+	return posts
+}
+
+
 func GetPostById(id int) (*Post, error) {
 	row := db.QueryRow("SELECT p.id, p.title, p.slug, p.content, p.user_id, u.email, p.created_at, p.updated_at FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?", id)
 
