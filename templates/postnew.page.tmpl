@@ -6,7 +6,13 @@ New Post
 
 
 {{define "content"}}
-<h1>New Post Page</h1>
+<div class="container">
+  <div class="row">
+      <div class="col-lg-12">
+<h1 class="mt-5">New Post</h1>
+    </div>
+  </div>
+</div>
 <div class="container col-5">
     <form id="form" action="/post/new" method="post" class="m-5">
       <div id="errors" class="alert alert-danger" hidden>
