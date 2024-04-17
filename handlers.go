@@ -37,6 +37,18 @@ func getUserByCookie(r *http.Request) *SessionUser {
 	return nil
 }
 
+
+func (a *Application) AuthUserEditMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := getUserByCookie(r)
+		if user == nil {
+			log.Println("User not logged in. Redirect to login page...")
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+		}
+		next(w, r)
+	}
+}
+
 func (a *Application) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := getUserByCookie(r)
@@ -137,8 +149,13 @@ func (a *Application) PostHandler(view *View) http.HandlerFunc {
 		if errorMsg != "" {
 			errors = append(errors, errorMsg)
 		}
-		posts := ReadPosts()
-		err := view.Render(w, r, &TemplateData{Posts: posts, Errors: errors})
+		userEmail := getUserByCookie(r).Email
+		user, err := FindUserByEmail(userEmail)
+		if err != nil{
+			log.Println(err)
+		}
+		posts := ReadPostsById(user.Id)
+		err = view.Render(w, r, &TemplateData{Posts: posts, Errors: errors})
 		if err != nil {
 			log.Println(err)
 		}
