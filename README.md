@@ -21,7 +21,10 @@ git clone https://github.com/Mario-Juu/WebDevGo.git
 ```sh
 docker run --name dbblog -e MYSQL_ROOT_PASSWORD=secret -e MARIADB_MSQL_LOCALHOST_USER=true -p 3306:3306 -d mariadb:latest
 ```
-4. Abra o executável (WebDevGo.exe)
+4. Execute a aplicação
+```sh
+go run .
+```
 5. Visite o site na porta 8080 (http://localhost:8080)
 
 
